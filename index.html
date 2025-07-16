@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>Short Link Generator (サーバーレス)</title>
+  <!-- アイコンはindex.htmlと同じフォルダにicon.svgとして配置してください -->
+  <link rel="icon" href="icon.svg" type="image/svg+xml" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link href="https://fonts.googleapis.com/css2?family=Comic+Neue:wght@700&family=M+PLUS+Rounded+1c&display=swap" rel="stylesheet" />
+
+  <style>
+    /* CSS変数でライトテーマとダークテーマの色を定義します */
+    :root {
+      --color-bg-light: #fff0f6; /* ライトテーマの背景色 */
+      --color-bg-dark: #1b1b1b; /* ダークテーマの背景色 */
+      --color-text-light: #3b1f2b; /* ライトテーマのテキスト色 */
+      --color-text-dark: #f0e9e0; /* ダークテーマのテキスト色 */
+      --color-accent-light: #b34a2f; /* ライトテーマのアクセント色 */
+      --color-accent-dark: #f2c9b3; /* ダークテーマのアクセント色 */
+      --color-button-bg-light: #f6c6c1; /* ライトテーマのボタン背景色 */
+      --color-button-bg-dark: #b75a42; /* ダークテーマのボタン背景色 */
+      --color-button-hover-light: #f7a6a2; /* ライトテーマのボタンホバー色 */
+      --color-button-hover-dark: #d1734f; /* ダークテーマのボタンホバー色 */
+    }
+
+    /* 全体のボディスタイル */
+    body {
+      font-family: 'M PLUS Rounded 1c', 'Comic Neue', cursive, sans-serif; /* フォントファミリー */
+      background-color: var(--color-bg-light); /* 背景色（ライトテーマ） */
+      color: var(--color-text-light); /* テキスト色（ライトテーマ） */
+      padding: 2rem; /* 内側の余白 */
+      max-width: 600px; /* 最大幅 */
+      margin: auto; /* 中央揃え */
+      line-height: 1.6; /* 行の高さ */
+      box-sizing: border-box; /* パディングとボーダーを幅に含める */
+    }
+
+    /* ヘッダー (h1) のスタイル */
+    h1 {
+      text-align: center; /* 中央揃え */
+      font-weight: 700; /* 太字 */
+      font-size: 2.4rem; /* フォントサイズ */
+      color: var(--color-accent-light); /* 色（ライトテーマ） */
+      text-shadow: 1px 1px 0 #fff3f3; /* テキストの影 */
+      margin-bottom: 2rem; /* 下の余白 */
+    }
+
+    /* フォームのスタイル */
+    form {
+      display: flex; /* Flexboxを使用 */
+      flex-direction: column; /* 要素を縦に並べる */
+      gap: 1rem; /* 要素間の隙間 */
+      margin-top: 2rem; /* 上の余白 */
+      background-color: rgba(255, 255, 255, 0.8); /* 半透明の背景 */
+      padding: 1.5rem; /* 内側の余白 */
+      border-radius: 20px; /* 角丸 */
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1); /* 影 */
+    }
+
+    /* 入力フィールドのスタイル */
+    input[type="url"] {
+      padding: 0.8rem; /* 内側の余白 */
+      font-size: 1.1rem; /* フォントサイズ */
+      border: 2px solid var(--color-accent-light); /* ボーダー */
+      border-radius: 16px; /* 角丸 */
+      width: 100%; /* 幅いっぱい */
+      box-sizing: border-box; /* パディングとボーダーを幅に含める */
+      transition: all 0.3s ease; /* アニメーション */
+    }
+
+    /* 入力フィールドのプレースホルダーのスタイル */
+    input::placeholder {
+      color: #a66a5a; /* 色 */
+      font-style: italic; /* 斜体 */
+    }
+
+    /* 入力フィールドがフォーカスされた時のスタイル */
+    input:focus {
+      border-color: var(--color-button-bg-light); /* ボーダー色 */
+      background-color: #fff4f6; /* 背景色 */
+      outline: none; /* アウトラインを非表示 */
+      box-shadow: 0 0 0 3px rgba(179, 74, 47, 0.2); /* 影 */
+    }
+
+    /* ボタンの共通スタイル */
+    button {
+      padding: 0.85rem 1.5rem; /* 内側の余白 */
+      font-size: 1.1rem; /* フォントサイズ */
+      background-color: var(--color-button-bg-light); /* 背景色（ライトテーマ） */
+      color: var(--color-accent-light); /* テキスト色（ライトテーマ） */
+      border: none; /* ボーダーなし */
+      border-radius: 20px; /* 角丸 */
+      cursor: pointer; /* カーソルをポインターに */
+      font-weight: 700; /* 太字 */
+      box-shadow: 1px 4px 8px rgba(179, 74, 47, 0.5); /* 影 */
+      transition: all 0.3s ease; /* アニメーション */
+      width: 100%; /* 幅いっぱい */
+    }
+
+    /* ボタンがホバーされた時のスタイル */
+    button:hover {
+      background-color: var(--color-button-hover-light); /* 背景色 */
+      color: white; /* テキスト色 */
+      transform: translateY(-2px); /* 少し上に移動 */
+      box-shadow: 1px 6px 12px rgba(179, 74, 47, 0.6); /* 影を強調 */
+    }
+
+    /* セカンダリボタンのスタイル（リセットボタンなど） */
+    .secondary-button {
+      background-color: transparent; /* 背景色を透明に */
+      color: var(--color-accent-light); /* テキスト色 */
+      border: 2px dashed var(--color-accent-light); /* 破線ボーダー */
+      box-shadow: none; /* 影なし */
+    }
+
+    /* セカンダリボタンがホバーされた時のスタイル */
+    .secondary-button:hover {
+      background-color: #ffe9ec; /* 背景色 */
+      color: var(--color-accent-light); /* テキスト色 */
+      transform: translateY(0); /* 移動なし */
+      box-shadow: none; /* 影なし */
+    }
+
+    /* 短縮URL表示段落のスタイル */
+    #shortUrlDisplay, #hashDetectedDisplay {
+      margin-top: 1.8rem; /* 上の余白 */
+      font-size: 1.15rem; /* フォントサイズ */
+      background-color: #ffe4e6; /* 背景色 */
+      padding: 1.1rem; /* 内側の余白 */
+      border-left: 10px solid var(--color-accent-light); /* 左ボーダー */
+      border-radius: 10px; /* 角丸 */
+      word-break: break-word; /* 長い単語を改行 */
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05); /* 影 */
+      display: none; /* 初期状態では非表示 */
+    }
+
+    /* コピーボタンのスタイル */
+    #copyButton, #openOriginalUrlButton {
+      margin-top: 0.7rem; /* 上の余白 */
+      padding: 0.5rem 1rem; /* 内側の余白 */
+      font-size: 0.95rem; /* フォントサイズ */
+      border-radius: 12px; /* 角丸 */
+      width: auto; /* 幅を自動調整 */
+      display: inline-block; /* インラインブロック要素 */
+      box-shadow: 0 2px 4px rgba(179, 74, 47, 0.3); /* 影 */
+    }
+
+    /* コピーメッセージのスタイル */
+    #copyMessage {
+      margin-left: 1em; /* 左の余白 */
+      color: green; /* 色 */
+      font-weight: bold; /* 太字 */
+      font-size: 0.9em; /* フォントサイズ */
+    }
+
+    /* リンクのスタイル */
+    a {
+      color: var(--color-accent-light); /* 色（ライトテーマ） */
+      text-decoration: none; /* 下線なし */
+      font-weight: bold; /* 太字 */
+    }
+
+    /* リンクがホバーされた時のスタイル */
+    a:hover {
+      text-decoration: underline; /* 下線を表示 */
+    }
+
+    /* フッターのスタイル */
+    footer {
+      text-align: center; /* 中央揃え */
+      margin-top: 3rem; /* 上の余白 */
+      color: var(--color-accent-light); /* 色（ライトテーマ） */
+      font-size: 0.9rem; /* フォントサイズ */
+    }
+
+    /* ローカルストレージに関する注意書きのスタイル */
+    .local-storage-notice {
+      font-size: 0.85em;
+      color: #d9534f; /* 赤系の警告色 */
+      margin-top: 1em;
+      padding: 0.5em;
+      border: 1px solid #d9534f;
+      border-radius: 5px;
+      background-color: rgba(217, 83, 79, 0.1); /* 薄い背景色 */
+      /* display: none; を削除し、常に表示されるように変更 */
+    }
+
+    /* ダークモードでのローカルストレージに関する注意書きのスタイル */
+    @media (prefers-color-scheme: dark) {
+      .local-storage-notice {
+        color: #f0ad4e; /* オレンジ系の警告色 */
+        border-color: #f0ad4e;
+        background-color: rgba(240, 173, 78, 0.1);
+      }
+    }
+
+    /* レスポンシブデザインの調整 */
+    @media (max-width: 768px) {
+      body {
+        padding: 1rem; /* 小さい画面ではパディングを減らす */
+      }
+      h1 {
+        font-size: 2rem; /* フォントサイズを調整 */
+      }
+      form {
+        padding: 1rem; /* フォームのパディングを調整 */
+      }
+      button {
+        padding: 0.75rem 1rem; /* ボタンのパディングを調整 */
+        font-size: 1rem; /* フォントサイズを調整 */
+      }
+      #shortUrlDisplay, #hashDetectedDisplay {
+        font-size: 1rem; /* フォントサイズを調整 */
+        padding: 0.8rem; /* パディングを調整 */
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1>🔗 ショートリンク作成サービス</h1>
+
+  <!-- フォームのactionとmethod属性を削除し、JavaScriptで処理します -->
+  <form id="shortenForm">
+    <input type="url" id="originalUrlInput" placeholder="https://example.com" required />
+    <button type="submit">短縮する</button>
+    <!-- リセットボタンはJavaScriptで表示/非表示を制御します -->
+    <button type="button" id="resetButton" class="secondary-button" style="display: none;">🔄 リセット</button>
+  </form>
+
+  <!-- ローカルストレージに関する注意書きの表示エリア -->
+  <div id="globalLocalStorageNotice" class="local-storage-notice">
+    ⚠️ このサービスで作成された短縮URLは、このブラウザ（またはこの端末）のローカルストレージに保存されます。他のブラウザやデバイスからはアクセスできません。
+  </div>
+
+  <!-- 短縮URLの表示部分。初期状態では非表示です。 -->
+  <p id="shortUrlDisplay">
+    ✅ 短縮URL: <a id="shortUrlAnchor" href="#" target="_blank" rel="noopener"></a><br>
+    <button id="copyButton">📋 コピー</button>
+    <span id="copyMessage"></span>
+  </p>
+
+  <!-- ハッシュ付きURLでアクセスされた場合に表示される部分 -->
+  <p id="hashDetectedDisplay">
+    この短縮URLは元のURLに紐付けられています。<br>
+    元のURL: <a id="hashOriginalUrlAnchor" href="#" target="_blank" rel="noopener"></a><br>
+    <button id="openOriginalUrlButton">元のURLを新しいタブで開く</button>
+  </p>
+
+  <footer>
+    <p id="copyright"></p>
+  </footer>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      // --- 著作権表示の自動更新 ---
+      // アプリケーションが作られた年 (baseYear) から現在の年までを表示します。
+      const baseYear = 2025; // アプリケーションが作られた年
+      const currentYear = new Date().getFullYear(); // 現在の年を取得
+      let yearText;
+      if (currentYear === baseYear) {
+        // 現在の年が基準年と同じ場合は、その年だけを表示
+        yearText = `${baseYear}`;
+      } else {
+        // 現在の年が基準年と異なる場合は、範囲で表示 (例: 2025~現在の年)
+        yearText = `${baseYear}~${currentYear}`;
+      }
+      // copyright IDを持つ要素にテキストを設定
+      document.getElementById("copyright").textContent = `© ${yearText} @hamusata`;
+
+      // --- DOM要素の取得 ---
+      const shortenForm = document.getElementById("shortenForm");
+      const originalUrlInput = document.getElementById("originalUrlInput");
+      const shortUrlDisplay = document.getElementById("shortUrlDisplay");
+      const shortUrlAnchor = document.getElementById("shortUrlAnchor");
+      const copyButton = document.getElementById("copyButton");
+      const copyMessage = document.getElementById("copyMessage");
+      const resetButton = document.getElementById("resetButton");
+      const hashDetectedDisplay = document.getElementById("hashDetectedDisplay");
+      const hashOriginalUrlAnchor = document.getElementById("hashOriginalUrlAnchor");
+      const openOriginalUrlButton = document.getElementById("openOriginalUrlButton");
+      const globalLocalStorageNotice = document.getElementById("globalLocalStorageNotice"); // 新しく追加
+
+      // --- ローカルストレージからのURLデータ読み込み ---
+      // 短縮URLのデータをローカルストレージから読み込む
+      // データはJSON文字列として保存されているため、JSON.parse()でオブジェクトに変換
+      const loadUrlData = () => {
+        try {
+          return JSON.parse(localStorage.getItem('shortenedUrls')) || {};
+        } catch (e) {
+          console.error("ローカルストレージからのデータ読み込みエラー:", e);
+          return {};
+        }
+      };
+
+      // URLデータをローカルストレージに保存する関数
+      // オブジェクトをJSON文字列に変換して保存
+      const saveUrlData = (data) => {
+        localStorage.setItem('shortenedUrls', JSON.stringify(data));
+      };
+
+      // --- ユニークなキーの生成 ---
+      // ランダムな文字列を生成し、既存のキーと重複しないことを確認
+      const generateUniqueKey = (length = 6) => {
+        const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+        let key = '';
+        let urlData = loadUrlData(); // 最新のURLデータを取得して重複チェック
+        do {
+          key = Array.from({ length }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
+        } while (urlData[key]); // 生成されたキーが既に存在する場合は再生成
+        return key;
+      };
+
+      // --- 表示状態を管理する関数 ---
+      // フォーム、生成された短縮URL表示、ハッシュ検出時の表示を切り替えます
+      // 注意書きは常に表示されるため、ここでは制御しません。
+      const showForm = () => {
+          shortenForm.style.display = 'flex'; // フォームを表示
+          originalUrlInput.value = ''; // 入力フィールドをクリア
+          shortUrlDisplay.style.display = 'none'; // 生成された短縮URL表示を非表示
+          hashDetectedDisplay.style.display = 'none'; // ハッシュ検出時の表示を非表示
+          resetButton.style.display = 'none'; // リセットボタンを非表示
+          copyMessage.textContent = ''; // コピーメッセージをクリア
+      };
+
+      const showGeneratedShortUrl = (shortUrl) => {
+          shortenForm.style.display = 'none'; // フォームを非表示
+          shortUrlDisplay.style.display = 'block'; // 生成された短縮URL表示を表示
+          hashDetectedDisplay.style.display = 'none'; // ハッシュ検出時の表示を非表示
+          resetButton.style.display = 'block'; // リセットボタンを表示
+          shortUrlAnchor.href = shortUrl;
+          shortUrlAnchor.textContent = shortUrl;
+      };
+
+      const showOriginalUrlFromHash = (originalUrl) => {
+          shortenForm.style.display = 'none'; // フォームを非表示
+          shortUrlDisplay.style.display = 'none'; // 生成された短縮URL表示を非表示
+          hashDetectedDisplay.style.display = 'block'; // ハッシュ検出時の表示を表示
+          resetButton.style.display = 'block'; // リセットボタンを表示
+          hashOriginalUrlAnchor.href = originalUrl;
+          hashOriginalUrlAnchor.textContent = originalUrl;
+      };
+
+      // --- フォームの送信処理 (短縮機能) ---
+      shortenForm.addEventListener("submit", (event) => {
+        event.preventDefault(); // フォームのデフォルト送信を防ぐ
+
+        const originalUrl = originalUrlInput.value.trim();
+        if (!originalUrl) {
+          return; // URLが空の場合は何もしない
+        }
+
+        let urlData = loadUrlData();
+        const key = generateUniqueKey();
+        // 短縮URLを生成 (現在のページのURL + ハッシュ # + キー)
+        // 例: http://localhost/index.html#abcde1
+        const shortUrl = window.location.origin + window.location.pathname + '#' + key;
+
+        // ローカルストレージに元のURLを保存
+        urlData[key] = originalUrl;
+        saveUrlData(urlData);
+
+        // 生成された短縮URLを表示状態にする
+        showGeneratedShortUrl(shortUrl);
+
+        // ブラウザのURLにハッシュを追加して、短縮URLを共有可能にする
+        // これにより、このURLをコピーして同じブラウザで開くと、ハッシュ検出時の表示になる
+        window.location.hash = key;
+      });
+
+      // --- コピーボタンの処理 ---
+      copyButton.addEventListener("click", () => {
+        const urlToCopy = shortUrlAnchor.href;
+        // クリップボードに短縮URLのテキストをコピー
+        // navigator.clipboard.writeTextはiframe内で動作しない場合があるため、
+        // document.execCommand('copy')を使用する代替手段を実装
+        const tempInput = document.createElement('textarea');
+        tempInput.value = urlToCopy;
+        document.body.appendChild(tempInput);
+        tempInput.select();
+        try {
+          document.execCommand('copy');
+          copyMessage.textContent = "コピーしました！"; // 成功メッセージを表示
+          // 成功メッセージは3秒後にクリア
+          setTimeout(() => copyMessage.textContent = "", 3000);
+        } catch (err) {
+          console.error('コピーに失敗しました:', err);
+          copyMessage.textContent = "コピーに失敗しました"; // 失敗メッセージを表示
+          // コピー失敗時、5秒後にメッセージをクリアし、フォームをリセット
+          setTimeout(() => {
+            copyMessage.textContent = ""; // 失敗メッセージをクリア
+            window.location.hash = ''; // URLのハッシュをクリア
+            showForm(); // フォーム表示状態に戻す
+          }, 5000); // 5秒後にリセット
+        } finally {
+          document.body.removeChild(tempInput); // 一時的な要素を削除
+        }
+      });
+
+      // --- リセットボタンの処理 ---
+      resetButton.addEventListener("click", () => {
+        window.location.hash = ''; // URLのハッシュをクリア
+        showForm(); // フォーム表示状態に戻す
+      });
+
+      // --- 「元のURLを新しいタブで開く」ボタンの処理 ---
+      openOriginalUrlButton.addEventListener("click", () => {
+        const originalUrl = hashOriginalUrlAnchor.href;
+        if (originalUrl && originalUrl !== '#') {
+          window.open(originalUrl, '_blank'); // 新しいタブで開く
+        }
+      });
+
+      // --- ページロード時のハッシュ検出と表示処理 ---
+      const checkHashOnLoad = () => {
+        const hash = window.location.hash.substring(1); // URLから#を除いたハッシュ値を取得
+        if (hash) {
+          // ハッシュが存在する場合
+          const urlData = loadUrlData();
+          const originalUrl = urlData[hash]; // ハッシュに対応する元のURLを取得
+          if (originalUrl) {
+            // 元のURLが見つかった場合は、そのURLを表示する状態にする
+            showOriginalUrlFromHash(originalUrl);
+          } else {
+            // ハッシュに対応するURLが見つからない場合は、フォーム表示状態に戻す
+            window.location.hash = ''; // 不正なハッシュをクリア
+            showForm();
+          }
+        } else {
+          // ハッシュがない場合は、フォーム表示状態にする
+          showForm();
+        }
+      };
+
+      // ページロード時にハッシュ検出処理を実行
+      checkHashOnLoad();
+
+      // hashchangeイベントリスナーは不要になりました（自動転送しないため）
+      // window.addEventListener('hashchange', checkHashOnLoad); // 不要
+    });
+  </script>
+</body>
+</html>
