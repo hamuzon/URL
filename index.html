@@ -2,473 +2,292 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8" />
-  <title>Short Link Generator</title>
-  <link rel="icon" href="icon.svg" type="image/svg+xml" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <link href="https://fonts.googleapis.com/css2?family=Comic+Neue:wght@700&family=M+PLUS+Rounded+1c&display=swap" rel="stylesheet" />
-
+  <title>Short link creation service</title>
+  <link rel="icon" href="https://home.hamusata.f5.si/icon.svg" type="image/svg+xml" />
   <style>
+    :root {
+      --color-accent: #3399ff;
+      --color-accent-light: #7fbfff;
+      --color-error: #d33;
+    }
+
     body {
-      font-family: 'M PLUS Rounded 1c', 'Comic Neue', cursive, sans-serif;
+      background: linear-gradient(180deg, #87ceeb 0%, #a0d8f7 30%, #c7e9ff 70%, #ffffff 100%);
+      font-family: 'Inter', 'Segoe UI', 'Hiragino Kaku Gothic ProN', Arial, sans-serif;
       padding: 2rem;
-      max-width: 600px;
-      margin: auto;
-      line-height: 1.6;
-      box-sizing: border-box;
-      background-color: white;
-      color: black;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+    }
+
+    .container {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(10px);
+      border-radius: 1.5rem;
+      max-width: 500px;
+      width: 100%;
+      padding: 2rem;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+      text-align: center;
     }
 
     h1 {
-      text-align: center;
-      font-weight: 700;
-      font-size: 2.4rem;
-      margin-bottom: 2rem;
-      text-shadow: 1px 1px 0 #eee;
+      font-size: 2.2rem;
+      margin-bottom: 1.5rem;
+      color: #333;
     }
 
     form {
       display: flex;
       flex-direction: column;
       gap: 1rem;
-      margin-top: 2rem;
-      background-color: rgba(255, 255, 255, 0.8);
-      padding: 1.5rem;
-      border-radius: 20px;
-      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+      margin-bottom: 1rem;
     }
 
-    input[type="url"] {
+    input[type="url"],
+    input[type="text"] {
       padding: 0.8rem;
       font-size: 1.1rem;
-      border: 2px solid #ccc;
-      border-radius: 16px;
-      width: 100%;
-      box-sizing: border-box;
-      transition: all 0.3s ease;
-    }
-
-    input::placeholder {
-      color: #999;
-      font-style: italic;
+      border: 1.5px solid var(--color-accent);
+      border-radius: 14px;
+      box-shadow: 0 6px 12px rgba(51, 153, 255, 0.15);
+      outline: none;
     }
 
     input:focus {
-      border-color: #f6c6c1;
-      background-color: #fff4f6;
-      outline: none;
-      box-shadow: 0 0 0 3px rgba(179, 74, 47, 0.2);
+      background-color: #f0f8ff;
+      border-color: #1673e6;
     }
 
     button {
-      padding: 0.85rem 1.5rem;
-      font-size: 1.1rem;
-      background-color: #f6c6c1;
-      color: #b34a2f;
+      padding: 0.85rem;
+      font-size: 1.15rem;
+      font-weight: bold;
       border: none;
-      border-radius: 20px;
+      border-radius: 14px;
+      background-color: var(--color-accent);
+      color: white;
       cursor: pointer;
-      font-weight: 700;
-      box-shadow: 1px 4px 8px rgba(179, 74, 47, 0.5);
-      transition: all 0.3s ease;
-      width: 100%;
+      box-shadow: 0 6px 15px rgba(51, 153, 255, 0.7);
     }
 
     button:hover {
-      background-color: #f7a6a2;
-      color: white;
-      transform: translateY(-2px);
-      box-shadow: 1px 6px 12px rgba(179, 74, 47, 0.6);
+      background-color: #1673e6;
     }
 
     .secondary-button {
-      background-color: transparent;
-      color: #b34a2f;
-      border: 2px dashed #b34a2f;
+      background-color: #aaa;
       box-shadow: none;
+      color: #333;
     }
 
     .secondary-button:hover {
-      background-color: #ffe9ec;
-      color: #b34a2f;
-      transform: translateY(0);
-      box-shadow: none;
+      background-color: #888;
     }
 
-    #shortUrlDisplay, #hashDetectedDisplay {
-      margin-top: 1.8rem;
-      font-size: 1.15rem;
-      background-color: #ffe4e6;
-      padding: 1.1rem;
-      border-left: 10px solid #b34a2f;
-      border-radius: 10px;
-      word-break: break-word;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+    #errorMessage {
+      color: var(--color-error);
+      font-weight: bold;
       display: none;
     }
 
-    #copyButton, #openOriginalUrlButton {
-      margin-top: 0.7rem;
-      padding: 0.5rem 1rem;
-      font-size: 0.95rem;
-      border-radius: 12px;
-      width: auto;
-      display: inline-block;
-      box-shadow: 0 2px 4px rgba(179, 74, 47, 0.3);
+    #warningMessage {
+      color: var(--color-accent-light);
+      font-weight: 600;
+      margin-top: 1rem;
+      line-height: 1.4;
     }
 
-    #copyMessage {
-      margin-left: 1em;
-      color: green;
-      font-weight: bold;
-      font-size: 0.9em;
+    #shortUrlDisplay {
+      margin-top: 1.5rem;
+      font-weight: 700;
+      color: #03314b;
+      display: none;
     }
 
-    a {
-      color: #b34a2f;
+    #shortUrlDisplay a {
+      color: var(--color-accent);
       text-decoration: none;
-      font-weight: bold;
+      word-break: break-word;
     }
 
-    a:hover {
+    #shortUrlDisplay a:hover {
       text-decoration: underline;
     }
 
+    #copyMessage {
+      color: green;
+      font-weight: bold;
+      margin-left: 0.8rem;
+    }
+
     footer {
-      text-align: center;
-      margin-top: 3rem;
-      color: #b34a2f;
+      margin-top: 2rem;
       font-size: 0.9rem;
+      color: #555;
     }
 
-    .local-storage-notice {
-      font-size: 0.85em;
-      color: #d9534f;
-      margin-top: 1em;
-      padding: 0.5em;
-      border: 1px solid #d9534f;
-      border-radius: 5px;
-      background-color: rgba(217, 83, 79, 0.1);
+    footer a {
+      color: var(--color-accent);
+      text-decoration: none;
     }
 
-    @media (max-width: 768px) {
-      body {
-        padding: 1rem;
-      }
-      h1 {
-        font-size: 2rem;
-      }
-      form {
-        padding: 1rem;
-      }
-      button {
-        padding: 0.75rem 1rem;
-        font-size: 1rem;
-      }
-      #shortUrlDisplay, #hashDetectedDisplay {
-        font-size: 1rem;
-        padding: 0.8rem;
-      }
+    footer a:hover {
+      text-decoration: underline;
     }
   </style>
 </head>
 <body>
-  <h1>🔗 ショートリンク作成サービス / Short Link Generator</h1>
+  <main class="container">
+    <h1>🔗 ショートリンク作成サービス</h1>
 
-  <form id="shortenForm">
-    <input type="url" id="originalUrlInput" placeholder="https://example.com" required />
-    <button type="submit">短縮する / Shorten</button>
-    <button type="button" id="resetButton" class="secondary-button" style="display: none;">🔄 リセット / Reset</button>
-  </form>
+    <form id="shortenForm" autocomplete="off" spellcheck="false">
+      <input type="url" id="urlInput" name="url" placeholder="https://example.com" required />
+      <input type="text" id="pathInput" name="path" placeholder="Custom path (optional, min 3 chars)" minlength="3" />
+      <button type="submit">短縮URLを作成</button>
+      <button type="button" id="resetButton" class="secondary-button" style="display:none;">🔄 リセット</button>
+    </form>
 
-  <div id="globalLocalStorageNotice" class="local-storage-notice">
-    ⚠️ このサービスで作成された短縮URLは、このブラウザ（またはこの端末）のローカルストレージに保存されます。他のブラウザやデバイスからはアクセスできません。<br>
-    ⚠️ The shortened URLs created with this service are saved only in local storage of this browser (or device). They are not accessible from other browsers or devices.
-  </div>
+    <p id="errorMessage"><span id="errorText"></span></p>
 
-  <p id="shortUrlDisplay">
-    ✅ 短縮URL: <a id="shortUrlAnchor" href="#" target="_blank" rel="noopener"></a><br>
-    ✅ Shortened URL: <a id="shortUrlAnchor" href="#" target="_blank" rel="noopener"></a><br>
-    <button id="copyButton">📋 コピー / Copy</button>
-    <span id="copyMessage"></span>
-  </p>
+    <p id="warningMessage">
+      ⚠️ 危険なリンクは管理者の判断で削除される場合があります。<br />
+      ⚠️ Dangerous links may be removed at the administrator's discretion.
+    </p>
 
-  <p id="hashDetectedDisplay">
-    この短縮URLは元のURLに紐付けられています。<br>
-    Original URL linked to this short URL:<br>
-    元のURL: <a id="hashOriginalUrlAnchor" href="#" target="_blank" rel="noopener"></a><br>
-    <button id="openOriginalUrlButton">元のURLを新しいタブで開く / Open Original URL in New Tab</button>
-  </p>
+    <div id="shortUrlDisplay">
+      ✅ 短縮URL: <a id="shortUrlLink" href="#" target="_blank" rel="noopener"></a><br />
+      <button id="copyButton">📋 コピー</button>
+      <span id="copyMessage"></span>
+    </div>
 
-  <footer>
-    <p id="copyright"></p>
-  </footer>
+    <footer>
+      <p>このサービスは <a href="https://link-s.f5.si" target="_blank" rel="noopener">link-s.f5.si</a> と <a href="https://go.link-s.f5.si" target="_blank" rel="noopener">go.Link-s.f5.si</a> のAPIを使用しています。<br />
+      This service uses the API from <a href="https://link-s.f5.si" target="_blank" rel="noopener">link-s.f5.si</a> and <a href="https://go.link-s.f5.si" target="_blank" rel="noopener">go.Link-s.f5.si</a>.</p>
+      <p id="copyright"></p>
+    </footer>
+  </main>
 
-<script>
-    document.addEventListener("DOMContentLoaded", () => {
-  const baseYear = 2025;
-  const currentYear = new Date().getFullYear();
-  let yearText = (currentYear === baseYear) ? `${baseYear}` : `${baseYear}~${currentYear}`;
-  document.getElementById("copyright").textContent = `© ${yearText} @hamuszon`;
+  <script>
+    const form = document.getElementById("shortenForm");
+    const resultLink = document.getElementById("shortUrlLink");
+    const shortUrlDisplay = document.getElementById("shortUrlDisplay");
+    const errorMessage = document.getElementById("errorMessage");
+    const errorText = document.getElementById("errorText");
+    const copyButton = document.getElementById("copyButton");
+    const copyMessage = document.getElementById("copyMessage");
+    const resetButton = document.getElementById("resetButton");
+    const urlInput = document.getElementById("urlInput");
+    const pathInput = document.getElementById("pathInput");
 
-  const shortenForm = document.getElementById("shortenForm");
-  const originalUrlInput = document.getElementById("originalUrlInput");
-  const shortUrlDisplay = document.getElementById("shortUrlDisplay");
-  const shortUrlAnchor = document.getElementById("shortUrlAnchor");
-  const copyButton = document.getElementById("copyButton");
-  const copyMessage = document.getElementById("copyMessage");
-  const resetButton = document.getElementById("resetButton");
-  const hashDetectedDisplay = document.getElementById("hashDetectedDisplay");
-  const hashOriginalUrlAnchor = document.getElementById("hashOriginalUrlAnchor");
-  const openOriginalUrlButton = document.getElementById("openOriginalUrlButton");
-
-  const adminDisplay = document.createElement('div');
-  adminDisplay.style.marginTop = "2rem";
-  adminDisplay.style.display = "none";
-  adminDisplay.id = "adminDisplay";
-  document.body.appendChild(adminDisplay);
-
-  const importInput = document.createElement("input");
-  importInput.type = "file";
-  importInput.accept = "application/json";
-  importInput.style.display = "none";
-  document.body.appendChild(importInput);
-
-  importInput.addEventListener("change", (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = function (event) {
-      try {
-        const importedData = JSON.parse(event.target.result);
-        if (typeof importedData === "object" && importedData !== null) {
-          saveUrlData(importedData);
-          adminDisplay.innerHTML = `<p>✅ インポート成功！ ${Object.keys(importedData).length} 件読み込みました。</p>`;
-          adminDisplay.style.display = "block";
-        } else {
-          throw new Error("不正なデータ形式");
-        }
-      } catch (err) {
-        adminDisplay.innerHTML = `<p>❌ 読み込みエラー: ${err.message}</p>`;
-        adminDisplay.style.display = "block";
-      }
-    };
-    reader.readAsText(file);
-  });
-
-  const loadUrlData = () => {
-    try {
-      return JSON.parse(localStorage.getItem('shortenedUrls')) || {};
-    } catch {
-      return {};
-    }
-  };
-
-  const saveUrlData = (data) => {
-    localStorage.setItem('shortenedUrls', JSON.stringify(data));
-  };
-
-  const generateUniqueKey = (length = 6) => {
-    const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-    let key = '';
-    let urlData = loadUrlData();
-    do {
-      key = Array.from({ length }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
-    } while (urlData[key]);
-    return key;
-  };
-
-  const showForm = () => {
-    shortenForm.style.display = 'flex';
-    originalUrlInput.value = '';
-    shortUrlDisplay.style.display = 'none';
-    hashDetectedDisplay.style.display = 'none';
-    adminDisplay.style.display = 'none';
-    resetButton.style.display = 'none';
-    copyMessage.textContent = '';
-  };
-
-  const showGeneratedShortUrl = (shortUrl) => {
-    shortenForm.style.display = 'none';
-    shortUrlDisplay.style.display = 'block';
-    hashDetectedDisplay.style.display = 'none';
-    adminDisplay.style.display = 'none';
-    resetButton.style.display = 'block';
-    shortUrlAnchor.href = shortUrl;
-    shortUrlAnchor.textContent = shortUrl;
-  };
-
-  const showOriginalUrlFromHash = (originalUrl) => {
-    shortenForm.style.display = 'none';
-    shortUrlDisplay.style.display = 'none';
-    hashDetectedDisplay.style.display = 'block';
-    adminDisplay.style.display = 'none';
-    resetButton.style.display = 'block';
-    hashOriginalUrlAnchor.href = originalUrl;
-    hashOriginalUrlAnchor.textContent = originalUrl;
-  };
-
-  const showAdminPanel = (urlData, title = "🔐 管理パネル / Admin Panel") => {
-    if (!urlData || Object.keys(urlData).length === 0) {
-      adminDisplay.innerHTML = `<p>📂 データが存在しません</p>`;
-      adminDisplay.style.display = "block";
-      return;
-    }
-
-    let html = `<h2>${title}</h2><ul style='list-style:none; padding:0;'>`;
-    for (const [key, url] of Object.entries(urlData)) {
-      const shortUrl = `${location.origin}${location.pathname}#${key}`;
-      html += `
-        <li style="margin-bottom:1em;">
-          🔑 <code>${key}</code><br>
-          🔗 <a href="${shortUrl}" target="_blank">${shortUrl}</a><br>
-          🧭 <a href="${url}" target="_blank">${url}</a><br>
-          <button data-key="${key}" class="deleteKeyButton">🗑 削除 / Delete</button>
-        </li>
-      `;
-    }
-    html += `</ul><button id="clearAllUrls">🚨 全削除 / Clear All</button>`;
-    adminDisplay.innerHTML = html;
-    adminDisplay.style.display = "block";
-
-    document.querySelectorAll('.deleteKeyButton').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        const keyToDelete = e.target.getAttribute('data-key');
-        let data = loadUrlData();
-        delete data[keyToDelete];
-        saveUrlData(data);
-        showAdminPanel(data);
-      });
-    });
-
-    document.getElementById('clearAllUrls').addEventListener('click', () => {
-      if (confirm("本当にすべて削除しますか？")) {
-        localStorage.removeItem('shortenedUrls');
-        adminDisplay.innerHTML = "<p>🗑️ 全部削除されました！</p>";
-      }
-    });
-  };
-
-  shortenForm.addEventListener("submit", (event) => {
-    event.preventDefault();
-    const originalUrl = originalUrlInput.value.trim();
-    if (!originalUrl) return;
-
-    if (originalUrl.startsWith("admin::")) {
-      const command = originalUrl.slice(7).trim();
-      const urlData = loadUrlData();
-
-      shortenForm.style.display = "none";
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      errorMessage.style.display = "none";
+      copyMessage.textContent = "";
       shortUrlDisplay.style.display = "none";
-      hashDetectedDisplay.style.display = "none";
-      adminDisplay.style.display = "block";
-      resetButton.style.display = "block";
 
-      if (command === "list") {
-        showAdminPanel(urlData);
-      } else if (command === "clear") {
-        if (confirm("本当にすべて削除しますか？")) {
-          localStorage.removeItem('shortenedUrls');
-          adminDisplay.innerHTML = "<p>🗑️ 全部削除しました！</p>";
-        }
-      } else if (command.startsWith("search=")) {
-        const query = command.slice(7).toLowerCase();
-        const filtered = {};
-        for (const [key, url] of Object.entries(urlData)) {
-          if (key.toLowerCase().includes(query) || url.toLowerCase().includes(query)) {
-            filtered[key] = url;
+      const url = urlInput.value.trim();
+      const path = pathInput.value.trim() || undefined;
+
+      if (path && !/^[A-Za-z0-9]{3,}$/.test(path)) {
+        errorText.textContent = "カスタムパスは英数字3文字以上で入力してください。";
+        errorMessage.style.display = "block";
+        return;
+      }
+
+      if (path) {
+        try {
+          const res = await fetch("https://go.link-s.f5.si/api/shorten", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ url, path }),
+          });
+          const data = await res.json();
+
+          if (res.ok && data.shortUrl) {
+            resultLink.href = data.shortUrl;
+            resultLink.textContent = data.shortUrl;
+            shortUrlDisplay.style.display = "block";
+            resetButton.style.display = "inline-block";
+            urlInput.disabled = true;
+            pathInput.disabled = true;
+          } else {
+            errorText.textContent = data.error || "不明なエラーです";
+            errorMessage.style.display = "block";
           }
+        } catch {
+          errorText.textContent = "通信エラーが発生しました。";
+          errorMessage.style.display = "block";
         }
-        showAdminPanel(filtered, `🔍 検索結果: "${query}"`);
-      } else if (command === "export") {
-        const blob = new Blob([JSON.stringify(urlData, null, 2)], { type: 'application/json' });
-        const exportUrl = URL.createObjectURL(blob);
-        adminDisplay.innerHTML = `<a href="${exportUrl}" download="shortened_urls.json">📥 JSONとしてダウンロード</a>`;
-      } else if (command === "import") {
-        importInput.click();
-      } else if (command === "count") {
-        adminDisplay.innerHTML = `<p>📊 登録数: ${Object.keys(urlData).length} 件</p>`;
-      } else if (command === "help") {
-        adminDisplay.innerHTML = `
-          <h2>🛠️ 管理コマンド一覧 / Admin Commands</h2>
-          <ul>
-            <li><code>admin::list</code> - 登録一覧を表示</li>
-            <li><code>admin::clear</code> - 全削除</li>
-            <li><code>admin::search=文字列</code> - キー or URL の検索</li>
-            <li><code>admin::export</code> - JSONダウンロード</li>
-            <li><code>admin::import</code> - JSONインポート（ファイル選択）</li>
-            <li><code>admin::count</code> - 登録件数を表示</li>
-            <li><code>admin::help</code> - この一覧を表示</li>
-          </ul>`;
-      } else {
-        adminDisplay.innerHTML = `<p>❓ 未知のコマンドです → <code>${command}</code></p>`;
+        return;
       }
 
-      return;
-    }
+      const apis = [
+        "https://link-s.f5.si/api/shorten",
+        "https://go.link-s.f5.si/api/shorten",
+      ];
 
-    const urlData = loadUrlData();
-    const key = generateUniqueKey();
-    const shortUrl = window.location.origin + window.location.pathname + '#' + key;
-    urlData[key] = originalUrl;
-    saveUrlData(urlData);
-    showGeneratedShortUrl(shortUrl);
-    window.location.hash = key;
-  });
+      for (const apiUrl of apis) {
+        try {
+          const res = await fetch(apiUrl, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ url }),
+          });
+          const data = await res.json();
 
-  copyButton.addEventListener("click", () => {
-    const urlToCopy = shortUrlAnchor.href;
-    const tempInput = document.createElement('textarea');
-    tempInput.value = urlToCopy;
-    document.body.appendChild(tempInput);
-    tempInput.select();
-    try {
-      document.execCommand('copy');
-      copyMessage.textContent = "コピーしました！ / Copied!";
-      setTimeout(() => copyMessage.textContent = "", 3000);
-    } catch {
-      copyMessage.textContent = "コピーに失敗しました / Copy failed";
-      setTimeout(() => {
-        copyMessage.textContent = "";
-        window.location.hash = '';
-        showForm();
-      }, 5000);
-    } finally {
-      document.body.removeChild(tempInput);
-    }
-  });
-
-  resetButton.addEventListener("click", () => {
-    window.location.hash = '';
-    showForm();
-  });
-
-  openOriginalUrlButton.addEventListener("click", () => {
-    const originalUrl = hashOriginalUrlAnchor.href;
-    if (originalUrl && originalUrl !== '#') {
-      window.open(originalUrl, '_blank');
-    }
-  });
-
-  const checkHashOnLoad = () => {
-    const hash = window.location.hash.substring(1);
-    if (hash) {
-      const urlData = loadUrlData();
-      const originalUrl = urlData[hash];
-      if (originalUrl) {
-        showOriginalUrlFromHash(originalUrl);
-      } else {
-        window.location.hash = '';
-        showForm();
+          if (res.ok && data.shortUrl) {
+            resultLink.href = data.shortUrl;
+            resultLink.textContent = data.shortUrl;
+            shortUrlDisplay.style.display = "block";
+            resetButton.style.display = "inline-block";
+            urlInput.disabled = true;
+            pathInput.disabled = true;
+            return;
+          } else {
+            continue;
+          }
+        } catch {
+          continue;
+        }
       }
-    } else {
-      showForm();
-    }
-  };
 
-  checkHashOnLoad();
-})
+      errorText.textContent = "両方のAPIへの通信に失敗しました。";
+      errorMessage.style.display = "block";
+    });
+
+    copyButton.addEventListener("click", () => {
+      navigator.clipboard.writeText(resultLink.href)
+        .then(() => {
+          copyMessage.textContent = "コピーしました！";
+          setTimeout(() => (copyMessage.textContent = ""), 2000);
+        })
+        .catch(() => {
+          copyMessage.textContent = "コピーに失敗しました。";
+        });
+    });
+
+    resetButton.addEventListener("click", () => {
+      urlInput.value = "";
+      pathInput.value = "";
+      urlInput.disabled = false;
+      pathInput.disabled = false;
+      shortUrlDisplay.style.display = "none";
+      errorMessage.style.display = "none";
+      copyMessage.textContent = "";
+      resetButton.style.display = "none";
+      urlInput.focus();
+    });
+
+    const baseYear = 2025;
+    const currentYear = new Date().getFullYear();
+    const yearText = currentYear === baseYear ? baseYear : baseYear + "〜" + currentYear;
+
+    document.getElementById("copyright").innerHTML =
+      '© ' + yearText + ' <a href="https://hamuzon.web.fc2.com/" target="_blank" rel="noopener">@hamuzon</a>';
   </script>
 </body>
 </html>
